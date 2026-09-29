@@ -10,6 +10,9 @@ interface EntryDao {
     @Insert
     suspend fun insert(entry: MetricEntry): Long
 
+    @Query("DELETE FROM metric_entries WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
     @Query("SELECT * FROM metric_entries WHERE metricId = :metricId ORDER BY loggedAt DESC")
     fun getEntriesForMetric(metricId: Long): Flow<List<MetricEntry>>
 

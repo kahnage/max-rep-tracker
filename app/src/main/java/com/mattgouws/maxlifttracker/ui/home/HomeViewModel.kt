@@ -27,6 +27,10 @@ class HomeViewModel(private val repository: GymRepository) : ViewModel() {
         viewModelScope.launch { repository.addMetric(name.trim(), unit) }
     }
 
+    fun deleteMetric(id: Long) {
+        viewModelScope.launch { repository.deleteMetric(id) }
+    }
+
     companion object {
         fun factory(repository: GymRepository) = viewModelFactory {
             initializer { HomeViewModel(repository) }

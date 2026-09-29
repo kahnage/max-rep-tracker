@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -129,5 +131,57 @@ class HomeScreenTest {
         val saved = runBlocking { repository.getAllMetrics().first() }.single()
         assertEquals("Overhead Press", saved.name)
         assertEquals("lb", saved.unit)
+    }
+
+    @Test
+    fun addingMetricShowsConfirmation() {
+        val repository = inMemoryRepository()
+        composeRule.setContent { HomeScreen(viewModel = HomeViewModel(repository), onMetricClick = {}) }
+
+        composeRule.onNodeWithContentDescription("Add metric").performClick()
+        composeRule.onNodeWithText("Name").performTextInput("Squat")
+        composeRule.onNodeWithText("Save").performClick()
+
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("Added Squat").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun longPressDeletesMetricAfterConfirming() {
+        val repository = inMemoryRepository()
+        runBlocking {
+            val squatId = repository.addMetric("Squat")
+            repository.logEntry(squatId, 100.0)
+            repository.addMetric("Bench")
+        }
+        composeRule.setContent { HomeScreen(viewModel = HomeViewModel(repository), onMetricClick = {}) }
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("Squat").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Cancelling keeps it.
+        composeRule.onNodeWithText("Squat").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Delete Squat?").assertIsDisplayed()
+        composeRule.onNodeWithText("Cancel").performClick()
+        composeRule.onNodeWithText("Delete Squat?").assertDoesNotExist()
+        composeRule.onNodeWithText("Squat").assertIsDisplayed()
+
+        // Confirming removes it and its entries, leaving other metrics alone.
+        composeRule.onNodeWithText("Squat").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Delete").performClick()
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("Deleted Squat").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("Squat").assertDoesNotExist()
+        composeRule.onNodeWithText("Bench").assertIsDisplayed()
+        assertEquals(listOf("Bench"), runBlocking { repository.getAllMetrics().first() }.map { it.name })
+    }
+
+    private fun inMemoryRepository(): GymRepository {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        // Not closed, for the same reason as in updatesLiveWhenDataChanges.
+        val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        return GymRepository(db.metricDao(), db.entryDao())
     }
 }

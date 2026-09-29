@@ -37,14 +37,17 @@ class LogEntryDialogTest {
 
         composeRule.onNodeWithText("Value (kg)").performTextInput("abc")
         composeRule.onNodeWithText("Save").assertIsNotEnabled()
-        composeRule.onNodeWithText("Enter a number greater than 0").assertIsDisplayed()
+        composeRule.onNodeWithText("Enter a number between 0 and 10000").assertIsDisplayed()
 
         composeRule.onNodeWithText("Value (kg)").performTextReplacement("0")
         composeRule.onNodeWithText("Save").assertIsNotEnabled()
 
+        composeRule.onNodeWithText("Value (kg)").performTextReplacement("10000")
+        composeRule.onNodeWithText("Save").assertIsNotEnabled()
+
         composeRule.onNodeWithText("Value (kg)").performTextReplacement("82.5")
         composeRule.onNodeWithText("Save").assertIsEnabled()
-        composeRule.onNodeWithText("Enter a number greater than 0").assertDoesNotExist()
+        composeRule.onNodeWithText("Enter a number between 0 and 10000").assertDoesNotExist()
     }
 
     @Test

@@ -30,4 +30,8 @@ class GymRepository(
         value: Double,
         loggedAt: Long = System.currentTimeMillis(),
     ): Long = entryDao.insert(MetricEntry(metricId = metricId, value = value, loggedAt = loggedAt))
+
+    suspend fun deleteMetric(id: Long) = metricDao.deleteById(id)
+
+    suspend fun deleteEntry(id: Long) = entryDao.deleteById(id)
 }

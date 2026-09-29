@@ -1,5 +1,6 @@
 package com.mattgouws.maxlifttracker.ui.detail
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,27 +17,35 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mattgouws.maxlifttracker.R
 import com.mattgouws.maxlifttracker.data.MetricEntry
 import com.mattgouws.maxlifttracker.data.TrackedMetric
+import com.mattgouws.maxlifttracker.ui.ConfirmDeleteDialog
 import com.mattgouws.maxlifttracker.ui.formatDateTime
 import com.mattgouws.maxlifttracker.ui.formatValue
 import com.mattgouws.maxlifttracker.ui.theme.MaxLiftTrackerTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun DetailScreen(
@@ -45,18 +54,48 @@ fun DetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLogDialog by rememberSaveable { mutableStateOf(false) }
+    var pendingDeleteId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    DetailContent(uiState = uiState, onBack = onBack, onLogEntry = { showLogDialog = true })
+    DetailContent(
+        uiState = uiState,
+        onBack = onBack,
+        onLogEntry = { showLogDialog = true },
+        onEntryLongClick = { id -> pendingDeleteId = id },
+        snackbarHostState = snackbarHostState,
+    )
 
-    val metric = uiState.metric
-    if (showLogDialog && metric != null) {
+    val metric = uiState.metric ?: return
+    if (showLogDialog) {
         LogEntryDialog(
             unit = metric.unit,
             onConfirm = { value ->
+                val message = if (uiState.isNewMax(value)) R.string.entry_logged_new_max else R.string.entry_logged
                 viewModel.logEntry(value)
                 showLogDialog = false
+                scope.launch { snackbarHostState.showSnackbar(context.getString(message, formatValue(value, metric.unit))) }
             },
             onDismiss = { showLogDialog = false },
+        )
+    }
+
+    val pendingDelete = uiState.entries.find { it.id == pendingDeleteId }
+    if (pendingDelete != null) {
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.delete_entry_title),
+            text = stringResource(
+                R.string.delete_entry_text,
+                formatValue(pendingDelete.value, metric.unit),
+                formatDateTime(pendingDelete.loggedAt),
+            ),
+            onConfirm = {
+                viewModel.deleteEntry(pendingDelete.id)
+                pendingDeleteId = null
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.entry_deleted)) }
+            },
+            onDismiss = { pendingDeleteId = null },
         )
     }
 }
@@ -68,12 +107,15 @@ fun DetailContent(
     onBack: () -> Unit,
     onLogEntry: () -> Unit,
     modifier: Modifier = Modifier,
+    onEntryLongClick: (entryId: Long) -> Unit = {},
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(uiState.metric?.name.orEmpty()) },
+                title = { Text(uiState.metric?.name.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -116,6 +158,11 @@ fun DetailContent(
             else -> LazyColumn(contentModifier) {
                 items(uiState.entries, key = { it.id }) { entry ->
                     ListItem(
+                        modifier = Modifier.combinedClickable(
+                            onClick = {},
+                            onLongClick = { onEntryLongClick(entry.id) },
+                            onLongClickLabel = stringResource(R.string.delete),
+                        ),
                         headlineContent = {
                             Text(formatValue(entry.value, metric.unit), style = MaterialTheme.typography.titleMedium)
                         },
