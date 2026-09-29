@@ -1,5 +1,6 @@
 package com.mattgouws.maxlifttracker.ui.home
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
@@ -26,6 +27,7 @@ class AddMetricDialogTest {
     private fun showDialog() {
         composeRule.setContent {
             AddMetricDialog(
+                existingNames = listOf("Bench Press"),
                 onConfirm = { name, unit -> confirmed = name to unit },
                 onDismiss = { dismissed = true },
             )
@@ -69,5 +71,24 @@ class AddMetricDialogTest {
         composeRule.onNodeWithText("Cancel").performClick()
         assertTrue(dismissed)
         assertEquals(null, confirmed)
+    }
+
+    @Test
+    fun duplicateNameIsRejectedIgnoringCaseAndSpaces() {
+        showDialog()
+        composeRule.onNodeWithText("Name").performTextInput("  bench press ")
+        composeRule.onNodeWithText("Save").assertIsNotEnabled()
+        composeRule.onNodeWithText("already tracking", substring = true).assertIsDisplayed()
+
+        composeRule.onNodeWithText("Name").performTextReplacement("Bench Press Incline")
+        composeRule.onNodeWithText("Save").assertIsEnabled()
+    }
+
+    @Test
+    fun nameIsCappedAtMaxLength() {
+        showDialog()
+        composeRule.onNodeWithText("Name").performTextInput("x".repeat(MAX_NAME_LENGTH + 10))
+        composeRule.onNodeWithText("Save").performClick()
+        assertEquals(MAX_NAME_LENGTH, confirmed!!.first.length)
     }
 }

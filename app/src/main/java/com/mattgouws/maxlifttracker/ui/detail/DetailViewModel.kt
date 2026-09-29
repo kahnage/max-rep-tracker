@@ -21,7 +21,10 @@ data class DetailUiState(
     val entries: List<MetricEntry> = emptyList(),
     // True until the first database read arrives, so the empty state doesn't flash on open.
     val isLoading: Boolean = true,
-)
+) {
+    /** True if [value] beats every existing entry. The first entry doesn't count as a new max. */
+    fun isNewMax(value: Double): Boolean = entries.isNotEmpty() && value > entries.maxOf { it.value }
+}
 
 class DetailViewModel(
     private val metricId: Long,
@@ -36,6 +39,10 @@ class DetailViewModel(
 
     fun logEntry(value: Double) {
         viewModelScope.launch { repository.logEntry(metricId, value) }
+    }
+
+    fun deleteEntry(id: Long) {
+        viewModelScope.launch { repository.deleteEntry(id) }
     }
 
     companion object {

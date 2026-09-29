@@ -79,8 +79,21 @@ class AppDatabaseTest {
         val squatId = metricDao.insert(TrackedMetric(name = "Squat"))
         entryDao.insert(MetricEntry(metricId = squatId, value = 60.0))
 
-        db.openHelper.writableDatabase.execSQL("DELETE FROM tracked_metrics WHERE id = $squatId")
+        metricDao.deleteById(squatId)
 
+        assertNull(metricDao.getMetricById(squatId).first())
         assertEquals(0, entryDao.getEntriesForMetric(squatId).first().size)
+    }
+
+    @Test
+    fun deletingEntryRemovesOnlyThatEntry() = runTest {
+        val squatId = metricDao.insert(TrackedMetric(name = "Squat"))
+        val keepId = entryDao.insert(MetricEntry(metricId = squatId, value = 60.0))
+        val deleteId = entryDao.insert(MetricEntry(metricId = squatId, value = 80.0))
+
+        entryDao.deleteById(deleteId)
+
+        assertEquals(listOf(keepId), entryDao.getEntriesForMetric(squatId).first().map { it.id })
+        assertEquals(60.0, entryDao.getMaxValueForMetric(squatId).first()!!, 0.0)
     }
 }

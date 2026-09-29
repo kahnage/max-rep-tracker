@@ -34,15 +34,19 @@ import com.mattgouws.maxlifttracker.ui.theme.MaxLiftTrackerTheme
 
 val WeightUnits = listOf("kg", "lb")
 
+const val MAX_NAME_LENGTH = 40
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMetricDialog(
+    existingNames: List<String>,
     onConfirm: (name: String, unit: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var unit by rememberSaveable { mutableStateOf(WeightUnits.first()) }
-    val canSave = name.isNotBlank()
+    val isDuplicate = existingNames.any { it.equals(name.trim(), ignoreCase = true) }
+    val canSave = name.isNotBlank() && !isDuplicate
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -54,9 +58,15 @@ fun AddMetricDialog(
             Column {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it.take(MAX_NAME_LENGTH) },
                     label = { Text(stringResource(R.string.metric_name)) },
                     placeholder = { Text(stringResource(R.string.metric_name_hint)) },
+                    isError = isDuplicate,
+                    supportingText = if (isDuplicate) {
+                        { Text(stringResource(R.string.metric_name_duplicate, name.trim())) }
+                    } else {
+                        null
+                    },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
@@ -102,6 +112,6 @@ fun AddMetricDialog(
 @Composable
 private fun AddMetricDialogPreview() {
     MaxLiftTrackerTheme {
-        AddMetricDialog(onConfirm = { _, _ -> }, onDismiss = {})
+        AddMetricDialog(existingNames = emptyList(), onConfirm = { _, _ -> }, onDismiss = {})
     }
 }

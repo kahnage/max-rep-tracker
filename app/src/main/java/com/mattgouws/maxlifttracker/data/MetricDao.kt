@@ -10,6 +10,10 @@ interface MetricDao {
     @Insert
     suspend fun insert(metric: TrackedMetric): Long
 
+    // Entries are removed with it by the ON DELETE CASCADE foreign key.
+    @Query("DELETE FROM tracked_metrics WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
     @Query("SELECT * FROM tracked_metrics ORDER BY name COLLATE NOCASE")
     fun getAllMetrics(): Flow<List<TrackedMetric>>
 

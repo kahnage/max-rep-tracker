@@ -12,6 +12,17 @@
     <string name="log_entry">Log entry</string>
     <string name="detail_empty">No entries yet.\nTap Log entry to record one.</string>
     <string name="entry_value">Value (%1$s)</string>
-    <string name="entry_value_error">Enter a number greater than 0</string>
+    <string name="entry_value_error">Enter a number between 0 and 10000</string>
     <string name="metric_not_found">This metric no longer exists.</string>
+    <string name="metric_name_duplicate">You\'re already tracking %1$s</string>
+    <string name="delete">Delete</string>
+    <string name="delete_metric_title">Delete %1$s?</string>
+    <string name="delete_metric_text">This also deletes all of its entries. This can\'t be undone.</string>
+    <string name="delete_entry_title">Delete entry?</string>
+    <string name="delete_entry_text">%1$s on %2$s. This can\'t be undone.</string>
+    <string name="metric_added">Added %1$s</string>
+    <string name="metric_deleted">Deleted %1$s</string>
+    <string name="entry_logged">Logged %1$s</string>
+    <string name="entry_logged_new_max">New max! %1$s</string>
+    <string name="entry_deleted">Entry deleted</string>
 </resources>
