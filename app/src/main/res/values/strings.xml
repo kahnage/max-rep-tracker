@@ -25,4 +25,6 @@
     <string name="entry_logged">Logged %1$s</string>
     <string name="entry_logged_new_max">New max! %1$s</string>
     <string name="entry_deleted">Entry deleted</string>
+    <string name="chart_title">Progress</string>
+    <string name="chart_description">Progress chart of %1$d entries, from %2$s to %3$s. Best %4$s.</string>
 </resources>

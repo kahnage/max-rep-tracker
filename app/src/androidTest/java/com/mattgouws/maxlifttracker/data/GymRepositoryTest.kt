@@ -66,10 +66,17 @@ class GymRepositoryTest {
 
     @Test
     fun viewModelReadsAndWritesThroughRepository() {
+        // Its own database, never closed: the ViewModel keeps observing it after the test ends, and
+        // a read against the shared one closed in tearDown crashes the test process. Being in-memory,
+        // it's discarded anyway.
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val openDb = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        val openRepository = GymRepository(openDb.metricDao(), openDb.entryDao())
+
         // viewModelScope runs on Dispatchers.Main, so create and drive the ViewModel on the main thread.
         lateinit var viewModel: TestViewModel
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            viewModel = TestViewModel(repository)
+            viewModel = TestViewModel(openRepository)
             viewModel.addMetric("Deadlift")
         }
 
