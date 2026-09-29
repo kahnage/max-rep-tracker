@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -13,7 +14,9 @@ import com.mattgouws.maxlifttracker.data.AppDatabase
 import com.mattgouws.maxlifttracker.data.GymRepository
 import com.mattgouws.maxlifttracker.data.MetricWithMax
 import com.mattgouws.maxlifttracker.data.TrackedMetric
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -83,7 +86,7 @@ class HomeScreenTest {
         val repository = GymRepository(db.metricDao(), db.entryDao())
         val viewModel = HomeViewModel(repository)
         composeRule.setContent {
-            HomeScreen(onAddMetric = {}, viewModel = viewModel)
+            HomeScreen(viewModel = viewModel)
         }
         composeRule.waitUntil(5_000) {
             composeRule.onAllNodesWithText("No lifts tracked yet", substring = true)
@@ -99,5 +102,30 @@ class HomeScreenTest {
         composeRule.waitUntil(5_000) {
             composeRule.onAllNodesWithText("80kg").fetchSemanticsNodes().isNotEmpty()
         }
+    }
+
+    @Test
+    fun addingMetricThroughDialogShowsItOnHome() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        // Not closed, for the same reason as in updatesLiveWhenDataChanges.
+        val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        val repository = GymRepository(db.metricDao(), db.entryDao())
+        val viewModel = HomeViewModel(repository)
+        composeRule.setContent {
+            HomeScreen(viewModel = viewModel)
+        }
+
+        composeRule.onNodeWithContentDescription("Add metric").performClick()
+        composeRule.onNodeWithText("Name").performTextInput("  Overhead Press  ")
+        composeRule.onNodeWithText("lb").performClick()
+        composeRule.onNodeWithText("Save").performClick()
+
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("Overhead Press").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("Save").assertDoesNotExist()
+        val saved = runBlocking { repository.getAllMetrics().first() }.single()
+        assertEquals("Overhead Press", saved.name)
+        assertEquals("lb", saved.unit)
     }
 }
