@@ -30,7 +30,7 @@ class HomeScreenTest {
     @Test
     fun showsEmptyStateWithNoMetrics() {
         composeRule.setContent {
-            HomeContent(HomeUiState(isLoading = false), onAddMetric = {})
+            HomeContent(HomeUiState(isLoading = false), onAddMetric = {}, onMetricClick = {})
         }
         composeRule.onNodeWithText("No lifts tracked yet", substring = true).assertIsDisplayed()
     }
@@ -41,6 +41,7 @@ class HomeScreenTest {
             HomeContent(
                 HomeUiState(listOf(MetricWithMax(TrackedMetric(id = 1, name = "Squat"), 60.0)), isLoading = false),
                 onAddMetric = {},
+                onMetricClick = {},
             )
         }
         composeRule.onNodeWithText("Squat").assertIsDisplayed()
@@ -60,6 +61,7 @@ class HomeScreenTest {
                     isLoading = false,
                 ),
                 onAddMetric = {},
+                onMetricClick = {},
             )
         }
         composeRule.onNodeWithText("62.5kg").assertIsDisplayed()
@@ -71,7 +73,7 @@ class HomeScreenTest {
     fun addButtonCallsOnAddMetric() {
         var clicked = false
         composeRule.setContent {
-            HomeContent(HomeUiState(isLoading = false), onAddMetric = { clicked = true })
+            HomeContent(HomeUiState(isLoading = false), onAddMetric = { clicked = true }, onMetricClick = {})
         }
         composeRule.onNodeWithContentDescription("Add metric").performClick()
         assertTrue(clicked)
@@ -86,7 +88,7 @@ class HomeScreenTest {
         val repository = GymRepository(db.metricDao(), db.entryDao())
         val viewModel = HomeViewModel(repository)
         composeRule.setContent {
-            HomeScreen(viewModel = viewModel)
+            HomeScreen(viewModel = viewModel, onMetricClick = {})
         }
         composeRule.waitUntil(5_000) {
             composeRule.onAllNodesWithText("No lifts tracked yet", substring = true)
@@ -112,7 +114,7 @@ class HomeScreenTest {
         val repository = GymRepository(db.metricDao(), db.entryDao())
         val viewModel = HomeViewModel(repository)
         composeRule.setContent {
-            HomeScreen(viewModel = viewModel)
+            HomeScreen(viewModel = viewModel, onMetricClick = {})
         }
 
         composeRule.onNodeWithContentDescription("Add metric").performClick()

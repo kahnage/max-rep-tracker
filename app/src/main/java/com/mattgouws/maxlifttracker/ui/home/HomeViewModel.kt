@@ -1,11 +1,9 @@
 package com.mattgouws.maxlifttracker.ui.home
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.mattgouws.maxlifttracker.MaxLiftTrackerApplication
 import com.mattgouws.maxlifttracker.data.GymRepository
 import com.mattgouws.maxlifttracker.data.MetricWithMax
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,11 +28,8 @@ class HomeViewModel(private val repository: GymRepository) : ViewModel() {
     }
 
     companion object {
-        val Factory = viewModelFactory {
-            initializer {
-                val app = this[APPLICATION_KEY] as MaxLiftTrackerApplication
-                HomeViewModel(app.repository)
-            }
+        fun factory(repository: GymRepository) = viewModelFactory {
+            initializer { HomeViewModel(repository) }
         }
     }
 }
