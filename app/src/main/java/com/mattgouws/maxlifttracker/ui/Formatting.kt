@@ -11,6 +11,13 @@ import java.util.Locale
 fun formatValue(value: Double, unit: String): String =
     BigDecimal.valueOf(value).stripTrailingZeros().toPlainString() + unit
 
+/**
+ * Parses a user-entered value, accepting "82.5" or "82,5". Returns null unless it's a finite
+ * number greater than zero.
+ */
+fun parseValue(text: String): Double? =
+    text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() && it > 0 }
+
 /** Formats an epoch-millis timestamp as a medium date and short time in the device's locale and zone. */
 fun formatDateTime(
     epochMillis: Long,

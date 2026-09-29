@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class DetailUiState(
     val metric: TrackedMetric? = null,
@@ -22,13 +23,20 @@ data class DetailUiState(
     val isLoading: Boolean = true,
 )
 
-class DetailViewModel(metricId: Long, repository: GymRepository) : ViewModel() {
+class DetailViewModel(
+    private val metricId: Long,
+    private val repository: GymRepository,
+) : ViewModel() {
     val uiState: StateFlow<DetailUiState> = combine(
         repository.getMetric(metricId),
         repository.getEntriesForMetric(metricId),
     ) { metric, entries ->
         DetailUiState(metric = metric, entries = entries, isLoading = false)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
+
+    fun logEntry(value: Double) {
+        viewModelScope.launch { repository.logEntry(metricId, value) }
+    }
 
     companion object {
         fun factory(repository: GymRepository) = viewModelFactory {
