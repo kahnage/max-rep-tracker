@@ -8,4 +8,8 @@
     <string name="unit">Unit</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
+    <string name="log_entry">Log entry</string>
+    <string name="detail_empty">No entries yet.\nTap Log entry to record one.</string>
+    <string name="metric_not_found">This metric no longer exists.</string>
 </resources>

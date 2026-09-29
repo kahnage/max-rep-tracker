@@ -1,5 +1,6 @@
 package com.mattgouws.maxlifttracker.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,7 +29,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mattgouws.maxlifttracker.R
 import com.mattgouws.maxlifttracker.data.MetricWithMax
 import com.mattgouws.maxlifttracker.data.TrackedMetric
@@ -37,12 +37,13 @@ import com.mattgouws.maxlifttracker.ui.theme.MaxLiftTrackerTheme
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+    viewModel: HomeViewModel,
+    onMetricClick: (metricId: Long) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
-    HomeContent(uiState = uiState, onAddMetric = { showAddDialog = true })
+    HomeContent(uiState = uiState, onAddMetric = { showAddDialog = true }, onMetricClick = onMetricClick)
 
     if (showAddDialog) {
         AddMetricDialog(
@@ -60,6 +61,7 @@ fun HomeScreen(
 fun HomeContent(
     uiState: HomeUiState,
     onAddMetric: () -> Unit,
+    onMetricClick: (metricId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -92,7 +94,7 @@ fun HomeContent(
 
             else -> LazyColumn(contentModifier) {
                 items(uiState.metrics, key = { it.metric.id }) { item ->
-                    MetricRow(item)
+                    MetricRow(item, onClick = { onMetricClick(item.metric.id) })
                     HorizontalDivider()
                 }
             }
@@ -101,9 +103,10 @@ fun HomeContent(
 }
 
 @Composable
-private fun MetricRow(item: MetricWithMax) {
+private fun MetricRow(item: MetricWithMax, onClick: () -> Unit) {
     val max = item.maxValue
     ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
         headlineContent = { Text(item.metric.name) },
         trailingContent = {
             Text(
@@ -124,7 +127,7 @@ private val previewMetrics = listOf(
 @Composable
 private fun HomeEmptyPreview() {
     MaxLiftTrackerTheme {
-        HomeContent(HomeUiState(isLoading = false), onAddMetric = {})
+        HomeContent(HomeUiState(isLoading = false), onAddMetric = {}, onMetricClick = {})
     }
 }
 
@@ -132,7 +135,7 @@ private fun HomeEmptyPreview() {
 @Composable
 private fun HomeSinglePreview() {
     MaxLiftTrackerTheme {
-        HomeContent(HomeUiState(previewMetrics.take(1), isLoading = false), onAddMetric = {})
+        HomeContent(HomeUiState(previewMetrics.take(1), isLoading = false), onAddMetric = {}, onMetricClick = {})
     }
 }
 
@@ -140,6 +143,6 @@ private fun HomeSinglePreview() {
 @Composable
 private fun HomeMultiplePreview() {
     MaxLiftTrackerTheme {
-        HomeContent(HomeUiState(previewMetrics, isLoading = false), onAddMetric = {})
+        HomeContent(HomeUiState(previewMetrics, isLoading = false), onAddMetric = {}, onMetricClick = {})
     }
 }
