@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -34,11 +37,22 @@ import com.mattgouws.maxlifttracker.ui.theme.MaxLiftTrackerTheme
 
 @Composable
 fun HomeScreen(
-    onAddMetric: () -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState = uiState, onAddMetric = onAddMetric)
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+
+    HomeContent(uiState = uiState, onAddMetric = { showAddDialog = true })
+
+    if (showAddDialog) {
+        AddMetricDialog(
+            onConfirm = { name, unit ->
+                viewModel.addMetric(name, unit)
+                showAddDialog = false
+            },
+            onDismiss = { showAddDialog = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val metrics: List<MetricWithMax> = emptyList(),
@@ -19,10 +20,14 @@ data class HomeUiState(
     val isLoading: Boolean = true,
 )
 
-class HomeViewModel(repository: GymRepository) : ViewModel() {
+class HomeViewModel(private val repository: GymRepository) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = repository.getAllMetricsWithMax()
         .map { HomeUiState(metrics = it, isLoading = false) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+
+    fun addMetric(name: String, unit: String) {
+        viewModelScope.launch { repository.addMetric(name.trim(), unit) }
+    }
 
     companion object {
         val Factory = viewModelFactory {

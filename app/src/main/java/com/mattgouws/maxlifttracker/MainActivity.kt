@@ -13,8 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MaxLiftTrackerTheme {
-                // The add-metric flow is wired up in #6.
-                HomeScreen(onAddMetric = {})
+                HomeScreen()
             }
         }
     }

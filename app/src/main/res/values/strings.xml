@@ -3,4 +3,9 @@
     <string name="add_metric">Add metric</string>
     <string name="home_empty">No lifts tracked yet.\nTap + to add your first one.</string>
     <string name="no_entries">No entries</string>
+    <string name="metric_name">Name</string>
+    <string name="metric_name_hint">e.g. Squat</string>
+    <string name="unit">Unit</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>
