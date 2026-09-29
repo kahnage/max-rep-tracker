@@ -156,6 +156,16 @@ fun DetailContent(
             }
 
             else -> LazyColumn(contentModifier) {
+                if (uiState.entries.size >= MIN_CHART_ENTRIES) {
+                    item(key = "chart") {
+                        ProgressChart(
+                            entries = uiState.entries,
+                            unit = metric.unit,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                        HorizontalDivider()
+                    }
+                }
                 items(uiState.entries, key = { it.id }) { entry ->
                     ListItem(
                         modifier = Modifier.combinedClickable(
