@@ -20,6 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,8 +44,21 @@ fun DetailScreen(
     onBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    // The log-entry flow is wired up in #8.
-    DetailContent(uiState = uiState, onBack = onBack, onLogEntry = {})
+    var showLogDialog by rememberSaveable { mutableStateOf(false) }
+
+    DetailContent(uiState = uiState, onBack = onBack, onLogEntry = { showLogDialog = true })
+
+    val metric = uiState.metric
+    if (showLogDialog && metric != null) {
+        LogEntryDialog(
+            unit = metric.unit,
+            onConfirm = { value ->
+                viewModel.logEntry(value)
+                showLogDialog = false
+            },
+            onDismiss = { showLogDialog = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

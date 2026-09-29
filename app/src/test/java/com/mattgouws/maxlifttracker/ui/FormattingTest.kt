@@ -1,6 +1,7 @@
 package com.mattgouws.maxlifttracker.ui
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.ZoneId
@@ -20,6 +21,20 @@ class FormattingTest {
         val text = formatDateTime(millis, ZoneId.of("Europe/London"), Locale.UK)
         assertTrue(text, text.contains("2026"))
         assertTrue(text, text.contains("21:30"))
+    }
+
+    @Test
+    fun parseValueAcceptsPositiveNumbers() {
+        assertEquals(82.5, parseValue("82.5")!!, 0.0)
+        assertEquals(82.5, parseValue("82,5")!!, 0.0)
+        assertEquals(100.0, parseValue(" 100 ")!!, 0.0)
+    }
+
+    @Test
+    fun parseValueRejectsInvalidInput() {
+        listOf("", "   ", "abc", "12kg", "1.2.3", "0", "-5", "NaN", "Infinity").forEach {
+            assertNull("\"$it\" should be rejected", parseValue(it))
+        }
     }
 
     @Test

@@ -11,5 +11,7 @@
     <string name="back">Back</string>
     <string name="log_entry">Log entry</string>
     <string name="detail_empty">No entries yet.\nTap Log entry to record one.</string>
+    <string name="entry_value">Value (%1$s)</string>
+    <string name="entry_value_error">Enter a number greater than 0</string>
     <string name="metric_not_found">This metric no longer exists.</string>
 </resources>
