@@ -1,18 +1,31 @@
 package com.mattgouws.maxlifttracker.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [TrackedMetric::class, MetricEntry::class],
-    version = 1,
+    entities = [
+        TrackedMetric::class,
+        MetricEntry::class,
+        Workout::class,
+        WorkoutExercise::class,
+        WorkoutCompletion::class,
+        QueuedWorkout::class,
+    ],
+    version = 2,
     exportSchema = true,
+    autoMigrations = [
+        // Adds the workout tables.
+        AutoMigration(from = 1, to = 2),
+    ],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun metricDao(): MetricDao
     abstract fun entryDao(): EntryDao
+    abstract fun workoutDao(): WorkoutDao
 
     companion object {
         @Volatile

@@ -39,6 +39,20 @@ class FormattingTest {
     }
 
     @Test
+    fun parseCountAcceptsWholeNumbersInRange() {
+        assertEquals(1, parseCount("1"))
+        assertEquals(12, parseCount(" 12 "))
+        assertEquals(999, parseCount("999"))
+    }
+
+    @Test
+    fun parseCountRejectsInvalidInput() {
+        listOf("", " ", "0", "-3", "1000", "2.5", "abc").forEach {
+            assertNull("\"$it\" should be rejected", parseCount(it))
+        }
+    }
+
+    @Test
     fun fractionsKeepTheirDecimals() {
         assertEquals("62.5kg", formatValue(62.5, "kg"))
         assertEquals("2.25kg", formatValue(2.25, "kg"))

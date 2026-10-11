@@ -29,7 +29,7 @@ class GymRepositoryTest {
     fun setUp() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        repository = GymRepository(db.metricDao(), db.entryDao())
+        repository = GymRepository(db.metricDao(), db.entryDao(), db.workoutDao())
     }
 
     @After
@@ -71,7 +71,7 @@ class GymRepositoryTest {
         // it's discarded anyway.
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val openDb = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        val openRepository = GymRepository(openDb.metricDao(), openDb.entryDao())
+        val openRepository = GymRepository(openDb.metricDao(), openDb.entryDao(), openDb.workoutDao())
 
         // viewModelScope runs on Dispatchers.Main, so create and drive the ViewModel on the main thread.
         lateinit var viewModel: TestViewModel

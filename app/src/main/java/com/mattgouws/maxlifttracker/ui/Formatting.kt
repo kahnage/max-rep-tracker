@@ -21,6 +21,12 @@ const val MAX_ENTRY_VALUE = 10_000.0
 fun parseValue(text: String): Double? =
     text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it < MAX_ENTRY_VALUE }
 
+/** Upper bound (inclusive) for sets, reps and rotation order. */
+const val MAX_COUNT = 999
+
+/** Parses a user-entered whole number. Returns null unless it's from 1 to [MAX_COUNT]. */
+fun parseCount(text: String): Int? = text.trim().toIntOrNull()?.takeIf { it in 1..MAX_COUNT }
+
 /** Formats an epoch-millis timestamp as a medium date and short time in the device's locale and zone. */
 fun formatDateTime(
     epochMillis: Long,
