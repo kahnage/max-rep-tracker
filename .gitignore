@@ -16,3 +16,8 @@ captures/
 # OS
 .DS_Store
 Thumbs.db
+
+# Release signing (see keystore.properties)
+keystore.properties
+*.jks
+*.keystore
