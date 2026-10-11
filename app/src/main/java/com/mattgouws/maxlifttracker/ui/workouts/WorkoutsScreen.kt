@@ -1,5 +1,6 @@
 package com.mattgouws.maxlifttracker.ui.workouts
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,7 +80,8 @@ fun WorkoutsScreen(
     onSavedMessageShown: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showCompleteDialog by rememberSaveable { mutableStateOf(false) }
+    // What to do with the up next workout, once confirmed. Null when no dialog is showing.
+    var pendingAction by rememberSaveable { mutableStateOf<UpNextAction?>(null) }
     var pendingDeleteId by rememberSaveable { mutableStateOf<Long?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -103,7 +105,8 @@ fun WorkoutsScreen(
         onAddWorkout = onAddWorkout,
         onWorkoutClick = onWorkoutClick,
         onWorkoutLongClick = { id -> pendingDeleteId = id },
-        onComplete = { showCompleteDialog = true },
+        onComplete = { pendingAction = UpNextAction.COMPLETE },
+        onSkip = { pendingAction = UpNextAction.SKIP },
         onQueue = { workout, mainWorkoutsBefore ->
             viewModel.queue(workout.id, mainWorkoutsBefore)
             val message = if (mainWorkoutsBefore == 0) R.string.queued_next else R.string.queued_in_two
@@ -117,16 +120,22 @@ fun WorkoutsScreen(
     )
 
     val upNext = uiState.upNext
-    if (showCompleteDialog && upNext != null) {
+    val action = pendingAction
+    if (action != null && upNext != null) {
         val name = upNext.workout.workout.name
-        CompleteWorkoutDialog(
+        ConfirmUpNextDialog(
+            action = action,
             workoutName = name,
+            isQueued = upNext.queueEntryId != null,
             onConfirm = {
-                viewModel.complete(upNext)
-                showCompleteDialog = false
-                showMessage(context.getString(R.string.workout_completed, name))
+                when (action) {
+                    UpNextAction.COMPLETE -> viewModel.complete(upNext)
+                    UpNextAction.SKIP -> viewModel.skip(upNext)
+                }
+                pendingAction = null
+                showMessage(context.getString(action.doneMessage, name))
             },
-            onDismiss = { showCompleteDialog = false },
+            onDismiss = { pendingAction = null },
         )
     }
 
@@ -154,6 +163,7 @@ fun WorkoutsContent(
     modifier: Modifier = Modifier,
     onWorkoutLongClick: (workoutId: Long) -> Unit = {},
     onComplete: () -> Unit = {},
+    onSkip: () -> Unit = {},
     onQueue: (workout: Workout, mainWorkoutsBefore: Int) -> Unit = { _, _ -> },
     onRemoveFromQueue: (ScheduledWorkout) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -195,7 +205,7 @@ fun WorkoutsContent(
                             scheduled = upNext,
                             latestCompletion = uiState.latestCompletion,
                             onComplete = onComplete,
-                            onRemoveFromQueue = { onRemoveFromQueue(upNext) },
+                            onSkip = onSkip,
                             modifier = Modifier.padding(16.dp),
                         )
                     } else {
@@ -297,7 +307,7 @@ private fun UpNextCard(
     scheduled: ScheduledWorkout,
     latestCompletion: WorkoutCompletion?,
     onComplete: () -> Unit,
-    onRemoveFromQueue: () -> Unit,
+    onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val workout = scheduled.workout.workout
@@ -346,10 +356,8 @@ private fun UpNextCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (scheduled.queueEntryId != null) {
-                    TextButton(onClick = onRemoveFromQueue) { Text(stringResource(R.string.remove_from_queue)) }
-                    Spacer(Modifier.width(8.dp))
-                }
+                TextButton(onClick = onSkip) { Text(stringResource(R.string.skip)) }
+                Spacer(Modifier.width(8.dp))
                 Button(onClick = onComplete, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
                     Icon(
                         painterResource(R.drawable.ic_check),
@@ -415,14 +423,34 @@ private fun QueueMenu(onQueue: (mainWorkoutsBefore: Int) -> Unit) {
     }
 }
 
+enum class UpNextAction(
+    @StringRes val title: Int,
+    @StringRes val confirmLabel: Int,
+    @StringRes val doneMessage: Int,
+) {
+    COMPLETE(R.string.complete_workout_title, R.string.complete, R.string.workout_completed),
+    SKIP(R.string.skip_workout_title, R.string.skip, R.string.workout_skipped),
+}
+
 @Composable
-private fun CompleteWorkoutDialog(workoutName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun ConfirmUpNextDialog(
+    action: UpNextAction,
+    workoutName: String,
+    isQueued: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val text = when {
+        action == UpNextAction.COMPLETE -> R.string.complete_workout_text
+        isQueued -> R.string.skip_queued_workout_text
+        else -> R.string.skip_workout_text
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.complete_workout_title, workoutName)) },
-        text = { Text(stringResource(R.string.complete_workout_text)) },
+        title = { Text(stringResource(action.title, workoutName)) },
+        text = { Text(stringResource(text)) },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.complete)) }
+            TextButton(onClick = onConfirm) { Text(stringResource(action.confirmLabel)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }

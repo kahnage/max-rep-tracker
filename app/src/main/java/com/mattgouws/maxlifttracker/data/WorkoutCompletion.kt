@@ -1,5 +1,6 @@
 package com.mattgouws.maxlifttracker.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -29,6 +30,9 @@ data class WorkoutCompletion(
     val workoutType: WorkoutType,
     val rotationOrder: Int?,
     val completedAt: Long = System.currentTimeMillis(),
+    // True when the workout was skipped rather than done. Skips still move the rotation on.
+    @ColumnInfo(defaultValue = "0")
+    val skipped: Boolean = false,
     // Groundwork for web sync (#12): unused for now.
     val remoteId: String? = null,
     val isSynced: Boolean = false,

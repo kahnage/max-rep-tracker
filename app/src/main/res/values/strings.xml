@@ -52,6 +52,11 @@
     <string name="complete_workout_title">Complete %1$s?</string>
     <string name="complete_workout_text">This records it as done and moves on to the next workout.</string>
     <string name="workout_completed">Completed %1$s</string>
+    <string name="skip">Skip</string>
+    <string name="skip_workout_title">Skip %1$s?</string>
+    <string name="skip_workout_text">It won\'t count as done, and the next workout in the rotation moves up.</string>
+    <string name="skip_queued_workout_text">It\'s taken off the queue without counting as done.</string>
+    <string name="workout_skipped">Skipped %1$s</string>
     <string name="queue">Queue</string>
     <string name="queue_next">Queue next</string>
     <string name="queue_in_two">Queue in 2 workouts\' time</string>

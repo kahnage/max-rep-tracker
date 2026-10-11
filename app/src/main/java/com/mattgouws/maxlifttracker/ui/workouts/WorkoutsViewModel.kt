@@ -41,6 +41,10 @@ class WorkoutsViewModel(private val repository: GymRepository) : ViewModel() {
         viewModelScope.launch { repository.completeWorkout(scheduled) }
     }
 
+    fun skip(scheduled: ScheduledWorkout) {
+        viewModelScope.launch { repository.skipWorkout(scheduled) }
+    }
+
     /** Queues an adhoc workout to be done once [mainWorkoutsBefore] more main workouts are done. */
     fun queue(workoutId: Long, mainWorkoutsBefore: Int) {
         viewModelScope.launch { repository.queueWorkout(workoutId, mainWorkoutsBefore) }

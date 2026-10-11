@@ -19,6 +19,7 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.mattgouws.maxlifttracker", appContext.packageName)
+        // Instrumented tests run against the debug build, which has the .debug suffix.
+        assertEquals("com.mattgouws.maxlifttracker.debug", appContext.packageName)
     }
 }
