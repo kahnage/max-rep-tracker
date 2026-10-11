@@ -1,0 +1,4 @@
+<resources>
+    <!-- Tells the debug build apart from the signed release on the same phone. -->
+    <string name="app_name">Max Lift (debug)</string>
+</resources>
