@@ -87,7 +87,7 @@ class HomeScreenTest {
         // Not closed: the screen keeps observing it until the compose rule tears down, after
         // this test body. Closing it here crashes that final read; being in-memory, it's discarded anyway.
         val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        val repository = GymRepository(db.metricDao(), db.entryDao())
+        val repository = GymRepository(db.metricDao(), db.entryDao(), db.workoutDao())
         val viewModel = HomeViewModel(repository)
         composeRule.setContent {
             HomeScreen(viewModel = viewModel, onMetricClick = {})
@@ -113,7 +113,7 @@ class HomeScreenTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         // Not closed, for the same reason as in updatesLiveWhenDataChanges.
         val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        val repository = GymRepository(db.metricDao(), db.entryDao())
+        val repository = GymRepository(db.metricDao(), db.entryDao(), db.workoutDao())
         val viewModel = HomeViewModel(repository)
         composeRule.setContent {
             HomeScreen(viewModel = viewModel, onMetricClick = {})
@@ -182,6 +182,6 @@ class HomeScreenTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         // Not closed, for the same reason as in updatesLiveWhenDataChanges.
         val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        return GymRepository(db.metricDao(), db.entryDao())
+        return GymRepository(db.metricDao(), db.entryDao(), db.workoutDao())
     }
 }
