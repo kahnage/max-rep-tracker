@@ -43,4 +43,30 @@ class MigrationTest {
             db.close()
         }
     }
+
+    @Test
+    fun migrating2To3KeepsHistoryAsNotSkipped() {
+        helper.createDatabase(dbName, 2).use { db ->
+            db.execSQL("INSERT INTO workouts (id, name, type, rotationOrder, createdAt, isSynced) VALUES (1, 'Push', 'MAIN', 1, 0, 0)")
+            db.execSQL(
+                "INSERT INTO workout_completions (id, workoutId, workoutName, workoutType, rotationOrder, completedAt, isSynced) " +
+                    "VALUES (1, 1, 'Push', 'MAIN', 1, 1000, 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(dbName, 3, true).close()
+
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName).build()
+        try {
+            val repository = GymRepository(db.metricDao(), db.entryDao(), db.workoutDao())
+            runBlocking {
+                val latest = repository.getLatestCompletion().first()
+                assertEquals("Push", latest?.workoutName)
+                assertEquals(false, latest?.skipped)
+            }
+        } finally {
+            db.close()
+        }
+    }
 }

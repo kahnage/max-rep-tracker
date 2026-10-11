@@ -87,6 +87,41 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun skippingAMainWorkoutMovesTheRotationOnWithoutCountingAsDone() = runTest {
+        addMain("Workout 1", 1)
+        addMain("Workout 2", 2)
+        addMain("Workout 3", 3)
+        val cardioId = addAdhoc("Cardio")
+        completeUpNext(at = 1_000)
+        repository.queueWorkout(cardioId, mainWorkoutsBefore = 1)
+
+        repository.skipWorkout(repository.getSchedule().first().first(), skippedAt = 2_000)
+
+        // The skip counts down the queue like a completed main workout would.
+        assertEquals("Cardio", upNext())
+        // "Last done" still shows the workout actually done.
+        assertEquals("Workout 1", repository.getLatestCompletion().first()?.workoutName)
+
+        completeUpNext(at = 3_000)
+        assertEquals("Workout 3", upNext())
+    }
+
+    @Test
+    fun skippingAQueuedWorkoutTakesItOffTheQueue() = runTest {
+        addMain("Workout 1", 1)
+        addMain("Workout 2", 2)
+        val cardioId = addAdhoc("Cardio")
+        repository.queueWorkout(cardioId, mainWorkoutsBefore = 0)
+
+        repository.skipWorkout(repository.getSchedule().first().first(), skippedAt = 1_000)
+
+        assertEquals(emptyList<QueuedWorkout>(), db.workoutDao().getQueue().first())
+        // The rotation hasn't moved.
+        assertEquals("Workout 1", upNext())
+        assertNull(repository.getLatestCompletion().first())
+    }
+
+    @Test
     fun savingReplacesExercisesInTheGivenOrder() = runTest {
         val id = repository.saveWorkout(
             Workout(name = "Push", type = WorkoutType.MAIN, rotationOrder = 1),

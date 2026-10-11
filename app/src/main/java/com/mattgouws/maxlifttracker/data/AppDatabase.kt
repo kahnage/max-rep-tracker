@@ -15,11 +15,13 @@ import androidx.room.RoomDatabase
         WorkoutCompletion::class,
         QueuedWorkout::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
     autoMigrations = [
         // Adds the workout tables.
         AutoMigration(from = 1, to = 2),
+        // Adds workout_completions.skipped.
+        AutoMigration(from = 2, to = 3),
     ],
 )
 abstract class AppDatabase : RoomDatabase() {

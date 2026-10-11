@@ -187,10 +187,26 @@ class WorkoutFlowTest {
         composeRule.onNodeWithText("Complete").performClick()
         assertUpNext("Cardio")
 
-        // Removing it from the queue goes back to the rotation, which has wrapped round to Workout 1.
-        composeRule.onNodeWithText("Remove from queue").performClick()
-        waitForText("Removed Cardio from the queue")
+        // Skipping it takes it off the queue and goes back to the rotation, which has wrapped round to Workout 1.
+        composeRule.onNodeWithText("Skip").performClick()
+        waitForText("It's taken off the queue", substring = true)
+        composeRule.onNode(inDialog(hasText("Skip"))).performClick()
+        waitForText("Skipped Cardio")
         assertUpNext("Workout 1")
+        assertEquals(0, runBlocking { repository.getSchedule().first() }.count { it.queueEntryId != null })
+
+        // Skipping a main workout moves the rotation on without changing "Last done".
+        composeRule.onNodeWithText("Skip").performClick()
+        composeRule.onNodeWithText("Skip Workout 1?").assertExists()
+        composeRule.onNode(inDialog(hasText("Skip"))).performClick()
+        waitForText("Skipped Workout 1")
+        assertUpNext("Workout 2")
+        waitForText("Last done: Workout 2", substring = true)
+
+        // Cancelling a skip does nothing.
+        composeRule.onNodeWithText("Skip").performClick()
+        composeRule.onNodeWithText("Cancel").performClick()
+        assertUpNext("Workout 2")
     }
 
     @Test

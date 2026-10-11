@@ -16,9 +16,11 @@ abstract class WorkoutDao {
     @Query("SELECT * FROM workout_queue ORDER BY id")
     abstract fun getQueue(): Flow<List<QueuedWorkout>>
 
-    @Query("SELECT * FROM workout_completions ORDER BY completedAt DESC, id DESC LIMIT 1")
+    /** The last workout actually done, ignoring skips. */
+    @Query("SELECT * FROM workout_completions WHERE skipped = 0 ORDER BY completedAt DESC, id DESC LIMIT 1")
     abstract fun getLatestCompletion(): Flow<WorkoutCompletion?>
 
+    // Skips count: skipping a main workout moves the rotation on just like doing it.
     @Query(
         """
         SELECT rotationOrder FROM workout_completions WHERE workoutType = 'MAIN'
@@ -75,11 +77,11 @@ abstract class WorkoutDao {
     }
 
     /**
-     * Records [workout] as done. A main workout counts down the queue; a queued adhoc one is
-     * removed from the queue by its [queueEntryId].
+     * Records [workout] as done, or as [skipped]. Either way a main workout counts down the queue
+     * and moves the rotation on, and a queued adhoc one is removed from the queue by its [queueEntryId].
      */
     @Transaction
-    open suspend fun completeWorkout(workout: Workout, queueEntryId: Long?, completedAt: Long) {
+    open suspend fun completeWorkout(workout: Workout, queueEntryId: Long?, completedAt: Long, skipped: Boolean) {
         insertCompletion(
             WorkoutCompletion(
                 workoutId = workout.id,
@@ -87,6 +89,7 @@ abstract class WorkoutDao {
                 workoutType = workout.type,
                 rotationOrder = workout.rotationOrder,
                 completedAt = completedAt,
+                skipped = skipped,
             ),
         )
         if (workout.type == WorkoutType.MAIN) countDownQueue()

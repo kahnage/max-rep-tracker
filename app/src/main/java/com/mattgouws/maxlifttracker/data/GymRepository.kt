@@ -69,5 +69,11 @@ class GymRepository(
     suspend fun completeWorkout(
         scheduled: ScheduledWorkout,
         completedAt: Long = System.currentTimeMillis(),
-    ) = workoutDao.completeWorkout(scheduled.workout.workout, scheduled.queueEntryId, completedAt)
+    ) = workoutDao.completeWorkout(scheduled.workout.workout, scheduled.queueEntryId, completedAt, skipped = false)
+
+    /** Moves past [scheduled] without doing it. It's recorded as skipped, not shown as last done. */
+    suspend fun skipWorkout(
+        scheduled: ScheduledWorkout,
+        skippedAt: Long = System.currentTimeMillis(),
+    ) = workoutDao.completeWorkout(scheduled.workout.workout, scheduled.queueEntryId, skippedAt, skipped = true)
 }
